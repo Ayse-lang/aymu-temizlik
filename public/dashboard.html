@@ -641,7 +641,7 @@
     }
 
     // Real-Time Updates
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket(`wss://${window.location.host}`);
     ws.onmessage = event => {
         const message = JSON.parse(event.data);
         if (message.type === "update") {
