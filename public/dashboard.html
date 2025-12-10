@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aymu Cleaning - Daily Reports</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f4f4;
+        }
+
+        .topbar {
+            background: #d32f2f;
+            color: #fff;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-title {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .topbar-right {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .pdf-btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .pdf-btn:hover {
+            background: #0d47a1;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 12px 40px;
+        }
+
+        .summary {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filters select,
+        .filters input {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+        }
+
+        .filters label {
+            font-size: 13px;
+            margin-right: 4px;
+        }
+
+        .filters button {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            background: #eeeeee;
+        }
+
+        .filters button:hover {
+            background: #e0e0e0;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #b71c1c;
+        }
+
+        .card small {
+            font-size: 11px;
+            color: #777;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .no-data {
+            font-size: 13px;
+            color: #999;
+            padding: 6px 0;
+        }
+
+        .tenant-not-home {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+
+        .tenant-home {
+            color: #388e3c;
+            font-weight: 600;
+        }
+
+        .signature-img {
+            width: 120px;
+            max-height: 80px;
+            object-fit: contain;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .photo-thumb {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: #fff;
+            margin-right: 4px;
+        }
+
+        .footer-tip {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #777;
+        }
+
+        /* Live cleaner cards */
+        .live-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .live-card {
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fafafa;
+            border: 1px solid #eee;
+            min-width: 220px;
+            max-width: 260px;
+            font-size: 13px;
+        }
+
+        .live-card-header {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #d32f2f;
+        }
+
+        .live-card-row {
+            margin: 2px 0;
+        }
+
+        .live-card-label {
+            font-weight: 600;
+        }
+
+        @media print {
+            .topbar, .filters, .footer-tip {
+                display: none;
+            }
+
+            body {
+                background: #fff;
+            }
+
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 0 10px;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #eee;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-title">Aymu Cleaning - Daily Reports</div>
+    <div class="topbar-right">Panel v1.0</div>
+    <button id="downloadPdfBtn" class="pdf-btn">📄 Download PDF</button>
+    <button id="downloadCsvBtn" class="pdf-btn">📄 Download CSV</button>
+    <button id="toggleDarkMode" class="pdf-btn">🌙 Dark Mode</button>
+</div>
+
+<div class="container">
+
+    <div class="summary" id="summaryText">
+        Loading...
+    </div>
+
+    <div class="filters">
+        <label for="filterCleaner">Cleaner:</label>
+        <select id="filterCleaner">
+            <option value="">All cleaners</option>
+        </select>
+
+        <label for="filterDateFrom">From:</label>
+        <input type="date" id="filterDateFrom">
+
+        <label for="filterDateTo">To:</label>
+        <input type="date" id="filterDateTo">
+
+        <button id="clearFiltersBtn">Clear filters</button>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="Search by tenant name..." style="margin-bottom: 10px; padding: 6px; width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+
+    <!-- Live cleaner cards -->
+    <div class="card">
+        <h3>Cleaner live status (current filter)</h3>
+        <small>Shows how many flats each cleaner has cleaned and their last flat in the selected date range.</small>
+        <div id="liveCardsBody" class="no-data">No data yet.</div>
+    </div>
+
+    <!-- Shift finished list -->
+    <div class="card" id="shiftCard">
+        <h3>Shift finished (Job Finished)</h3>
+        <div id="shiftContent" class="no-data">No job finished records yet.</div>
+    </div>
+
+    <!-- Cleaning records -->
+    <div class="card">
+        <h3>Cleaning records</h3>
+        <div id="recordsContainer"></div>
+        <div id="paginationControls" style="text-align: center; margin-top: 10px;"></div>
+    </div>
+
+    <div class="card">
+        <h3>Cleaner Performance</h3>
+        <canvas id="performanceChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="footer-tip">
+        Tip: For basic export you can also use your browser’s <b>Print → Save as PDF</b>.
+    </div>
+</div>
+
+<!-- PDF kütüphaneleri -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    let allCleanings = [];
+    let allShiftEnds = [];
+
+    const filterCleaner = document.getElementById("filterCleaner");
+    const filterDateFrom = document.getElementById("filterDateFrom");
+    const filterDateTo = document.getElementById("filterDateTo");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
+    const recordsContainer = document.getElementById("recordsContainer");
+    const shiftContent = document.getElementById("shiftContent");
+    const summaryText = document.getElementById("summaryText");
+    const liveCardsBody = document.getElementById("liveCardsBody");
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+
+    async function loadData() {
+        try {
+            const res = await fetch("/api/admin/cleanings");
+
+            // Check for HTTP errors
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+
+            const json = await res.json();
+
+            if (!json.success) {
+                summaryText.textContent = "Error loading data.";
+                return;
+            }
+
+            allCleanings = json.data.cleanings || [];
+            allShiftEnds = json.data.shiftEnds || [];
+
+            // Fill cleaner names in the filter dropdown
+            const cleaners = [...new Set(allCleanings.map(c => c.cleanerName))].sort();
+            cleaners.forEach(name => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name;
+                filterCleaner.appendChild(opt);
+            });
+
+            renderSummary();
+            renderShiftEnds();
+            renderCleanings();
+            renderLiveCards();
+            renderPerformanceChart();
+        } catch (e) {
+            console.error(e);
+            summaryText.textContent = "An error occurred while loading data. Please try again later.";
+        }
+    }
+
+    // Seçilen filtrelere göre kayıtları hesaplayan ortak fonksiyon
+    function getFilteredCleanings() {
+        let list = allCleanings.slice();
+        const cleaner = filterCleaner.value;
+        const from = filterDateFrom.value;
+        const to = filterDateTo.value;
+
+        // Validate date inputs
+        if (from && isNaN(Date.parse(from))) {
+            console.warn("Invalid 'From' date format.");
+            return [];
+        }
+        if (to && isNaN(Date.parse(to))) {
+            console.warn("Invalid 'To' date format.");
+            return [];
+        }
+
+        if (cleaner) {
+            list = list.filter(c => c.cleanerName === cleaner);
+        }
+        if (from) {
+            list = list.filter(c => c.cleaningDate && c.cleaningDate >= from);
+        }
+        if (to) {
+            list = list.filter(c => c.cleaningDate && c.cleaningDate <= to);
+        }
+        return list;
+    }
+
+    function renderSummary() {
+        const list = getFilteredCleanings();
+        const total = list.length;
+        const veryDirty = list.filter(c => c.status === "very_dirty").length;
+
+        summaryText.textContent =
+            `Current filter: ${total} cleanings, ${veryDirty} very dirty`;
+    }
+
+    function renderShiftEnds() {
+        if (!allShiftEnds.length) {
+            shiftContent.textContent = "No job finished records yet.";
+            return;
+        }
+
+        let html = "<table><tr><th>#</th><th>Cleaner</th><th>Finished at</th></tr>";
+
+        allShiftEnds.forEach((s, idx) => {
+            const dt = new Date(s.endedAt || s.createdAt || "");
+            const dateStr = dt.toLocaleString() || s.endedAt;
+
+            html += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${s.cleanerName || "-"}</td>
+                    <td>${dateStr}</td>
+                </tr>
+            `;
+        });
+
+        html += "</table>";
+        shiftContent.innerHTML = html;
+    }
+
+    function renderCleanings(list = getFilteredCleanings()) {
+        const start = (currentPage - 1) * recordsPerPage;
+        const paginatedList = list.slice(start, start + recordsPerPage);
+
+        if (!paginatedList.length) {
+            recordsContainer.innerHTML = '<div class="no-data">No cleaning records for this filter.</div>';
+            return;
+        }
+
+        // Cleaner’a göre grupla
+        const grouped = {};
+        paginatedList.forEach(c => {
+            const name = c.cleanerName || "Unknown";
+            if (!grouped[name]) grouped[name] = [];
+            grouped[name].push(c);
+        });
+
+        let html = "";
+
+        Object.keys(grouped).sort().forEach(cleaner => {
+            const records = grouped[cleaner];
+
+            html += `
+                <div style="margin-bottom:18px;" class="cleaner-group">
+                    <h4 style="margin:0 0 6px 0; color:#d32f2f;">Cleaner: ${cleaner}</h4>
+                    <table>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Block</th>
+                            <th>Flat</th>
+                            <th>Status</th>
+                            <th>Tenant</th>
+                            <th>Signature</th>
+                            <th>Photos</th>
+                            <th>Note</th>
+                        </tr>
+            `;
+
+            records.forEach(c => {
+                const tenantText = c.tenantNotHome
+                    ? `<span class="tenant-not-home">Not at home</span>`
+                    : (c.tenantName ? `<span class="tenant-home">${c.tenantName}</span>` : "-");
+
+                const noteText = c.notes && c.notes.trim() ? c.notes : "-";
+
+                let signatureCell = "-";
+                if (c.tenantNotHome) {
+                    signatureCell = "Tenant not at home";
+                } else if (c.tenantSigned && c.tenantSignature) {
+                    signatureCell = `<img src="${c.tenantSignature}" class="signature-img" alt="Signature">`;
+                } else if (c.tenantSigned && !c.tenantSignature) {
+                    signatureCell = "Signed (no image)";
+                }
+
+                let photosCell = "-";
+                if (Array.isArray(c.photos) && c.photos.length > 0) {
+                    photosCell = c.photos
+                        .map(url => `<a href="${url}" target="_blank"><img src="${url}" class="photo-thumb" alt="Photo"></a>`)
+                        .join("");
+                }
+
+                html += `
+                    <tr>
+                        <td>${c.cleaningDate || "-"}</td>
+                        <td>${c.cleaningTime || "-"}</td>
+                        <td>${c.block || "-"}</td>
+                        <td>${c.apartmentNumber || "-"}</td>
+                        <td>${c.status || "-"}</td>
+                        <td>${tenantText}</td>
+                        <td>${signatureCell}</td>
+                        <td>${photosCell}</td>
+                        <td>${noteText}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</table></div>`;
+        });
+
+        recordsContainer.innerHTML = html;
+        renderPaginationControls(list.length);
+    }
+
+    function renderLiveCards() {
+        const list = getFilteredCleanings();
+
+        if (!list.length) {
+            liveCardsBody.innerHTML = '<div class="no-data">No data for current filter.</div>';
+            return;
+        }
+
+        // Cleaner bazlı grupla
+        const grouped = {};
+        list.forEach(c => {
+            const name = c.cleanerName || "Unknown";
+            if (!grouped[name]) grouped[name] = [];
+            grouped[name].push(c);
+        });
+
+        let html = '<div class="live-grid">';
+
+        Object.keys(grouped).sort().forEach(cleaner => {
+            const records = grouped[cleaner];
+
+            // En son yapılan temizlik (tarih + saat’e göre)
+            const sorted = records.slice().sort((a, b) => {
+                const ad = a.cleaningDate || "";
+                const bd = b.cleaningDate || "";
+                if (ad === bd) {
+                    const at = a.cleaningTime || "";
+                    const bt = b.cleaningTime || "";
+                    return (ad + at).localeCompare(bd + bt);
+                }
+                return (ad + (a.cleaningTime || "")).localeCompare(bd + (b.cleaningTime || ""));
+            });
+            const last = sorted[sorted.length - 1];
+
+            const lastFlat = last
+                ? `${last.block || "-"} / ${last.apartmentNumber || "-"}`
+                : "-";
+
+            const lastTime = last
+                ? `${last.cleaningDate || "-"} ${last.cleaningTime || ""}`
+                : "-";
+
+            html += `
+                <div class="live-card">
+                    <div class="live-card-header">${cleaner}</div>
+                    <div class="live-card-row">
+                        <span class="live-card-label">Flats cleaned:</span> ${records.length}
+                    </div>
+                    <div class="live-card-row">
+                        <span class="live-card-label">Last flat:</span> ${lastFlat}
+                    </div>
+                    <div class="live-card-row">
+                        <span class="live-card-label">Last time:</span> ${lastTime}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += "</div>";
+        liveCardsBody.innerHTML = html;
+    }
+
+    function renderPerformanceChart() {
+        const ctx = document.getElementById("performanceChart").getContext("2d");
+        const cleaners = [...new Set(allCleanings.map(c => c.cleanerName))];
+        const data = cleaners.map(name => allCleanings.filter(c => c.cleanerName === name).length);
+
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: cleaners,
+                datasets: [{
+                    label: "Cleanings per Cleaner",
+                    data: data,
+                    backgroundColor: "rgba(75, 192, 192, 0.2)",
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Filtre eventleri
+    filterCleaner.addEventListener("change", () => {
+        renderSummary();
+        renderCleanings();
+        renderLiveCards();
+    });
+
+    filterDateFrom.addEventListener("change", () => {
+        renderSummary();
+        renderCleanings();
+        renderLiveCards();
+    });
+
+    filterDateTo.addEventListener("change", () => {
+        renderSummary();
+        renderCleanings();
+        renderLiveCards();
+    });
+
+    clearFiltersBtn.addEventListener("click", () => {
+        filterCleaner.value = "";
+        filterDateFrom.value = "";
+        filterDateTo.value = "";
+        renderSummary();
+        renderCleanings();
+        renderLiveCards();
+    });
+
+    // Search Functionality
+    document.getElementById("searchInput").addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        const filtered = allCleanings.filter(c => (c.tenantName || "").toLowerCase().includes(query));
+        renderCleanings(filtered);
+    });
+
+    // Pagination
+    let currentPage = 1;
+    const recordsPerPage = 10;
+
+    function renderPaginationControls(totalRecords) {
+        const totalPages = Math.ceil(totalRecords / recordsPerPage);
+        const paginationControls = document.getElementById("paginationControls");
+        paginationControls.innerHTML = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement("button");
+            button.textContent = i;
+            button.style.margin = "0 5px";
+            button.addEventListener("click", () => {
+                currentPage = i;
+                renderCleanings();
+            });
+            paginationControls.appendChild(button);
+        }
+    }
+
+    // Real-Time Updates
+    const ws = new WebSocket("ws://localhost:8080");
+    ws.onmessage = event => {
+        const message = JSON.parse(event.data);
+        if (message.type === "update") {
+            loadData(); // Reload data on update
+        }
+    };
+
+    // CSV Export Functionality
+    function downloadCsv() {
+        const list = getFilteredCleanings();
+        if (!list.length) {
+            alert("No data to export.");
+            return;
+        }
+
+        const headers = ["Date", "Time", "Block", "Flat", "Status", "Tenant", "Signature", "Photos", "Note"];
+        const rows = list.map(c => [
+            c.cleaningDate || "-",
+            c.cleaningTime || "-",
+            c.block || "-",
+            c.apartmentNumber || "-",
+            c.status || "-",
+            c.tenantName || (c.tenantNotHome ? "Not at home" : "-"),
+            c.tenantSigned ? (c.tenantSignature ? "Signed (with image)" : "Signed (no image)") : "-",
+            Array.isArray(c.photos) ? c.photos.join(", ") : "-",
+            c.notes || "-"
+        ]);
+
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "cleaning_records.csv");
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    document.getElementById("downloadCsvBtn").addEventListener("click", downloadCsv);
+
+    // Dark Mode
+    document.getElementById("toggleDarkMode").addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+    });
+
+    const darkModeStyles = `
+        body.dark-mode {
+            background: #121212;
+            color: #ffffff;
+        }
+        body.dark-mode .card {
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+        body.dark-mode .pdf-btn {
+            background: #333333;
+            color: #ffffff;
+        }
+    `;
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = darkModeStyles;
+    document.head.appendChild(styleSheet);
+
+    // PDF İNDİRME
+    async function downloadPdf() {
+        if (!window.jspdf || typeof html2canvas !== "function") {
+            alert("PDF libraries failed to load. Check your internet connection.");
+            return;
+        }
+
+        const groups = document.querySelectorAll(".cleaner-group");
+        if (!groups.length) {
+            alert("No data to export.");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "mm", "a4");
+        let y = 10;
+
+        // Logo (hata verirse sorun değil)
+        try {
+            pdf.addImage(
+                "https://scontent.fecn1-1.fna.fbcdn.net/v/t39.30808-6/359451601_756843066403651_3936054015145188865_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=q9KN4Aek5RcQ7kNvwGSJOpE&_nc_oc=AdkdLNDLwIHRIahfkNDVALDNzD_ZRSA4s4D-fvfNBW7NodDDfEcBcarL93ekKC6BmHk&_nc_zt=23&_nc_ht=scontent.fecn1-1.fna&_nc_gid=eH5RPuoyDu76PQHGqoJzWg&oh=00_Afmo78rM3MhBVFL3Zn4C4_658Q23t0fL4s87RoNytO0w7Q&oe=6934F05E",
+                "PNG",
+                160,
+                5,
+                30,
+                20
+            );
+        } catch (e) {
+            console.warn("Logo yüklenemedi:", e);
+        }
+
+        pdf.setFontSize(18);
+        pdf.text("Aymu Cleaning – Report", 10, y);
+        y += 8;
+
+        pdf.setFontSize(12);
+        pdf.text("Generated: " + new Date().toLocaleString(), 10, y);
+        y += 6;
+
+        // Filtre bilgisi
+        const from = filterDateFrom.value || "All";
+        const to = filterDateTo.value || "All";
+        const cleaner = filterCleaner.value || "All cleaners";
+        pdf.setFontSize(10);
+        pdf.text(`Filter - Cleaner: ${cleaner}, From: ${from}, To: ${to}`, 10, y);
+        y += 8;
+
+        for (let group of groups) {
+            const header = group.querySelector("h4");
+            const name = header ? header.innerText : "Cleaner";
+
+            if (y > 260) {
+                pdf.addPage();
+                y = 10;
+            }
+
+            pdf.setFontSize(13);
+            pdf.text(name, 10, y);
+            y += 6;
+
+            const table = group.querySelector("table");
+            const canvas = await html2canvas(table, { scale: 2 });
+            const imgData = canvas.toDataURL("image/png");
+
+            const imgWidth = 190;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            if (y + imgHeight > 280) {
+                pdf.addPage();
+                y = 10;
+            }
+
+            pdf.addImage(imgData, "PNG", 10, y, imgWidth, imgHeight);
+            y += imgHeight + 8;
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        pdf.save(`Aymu-Cleaning-Report-${today}.pdf`);
+    }
+
+    downloadPdfBtn.addEventListener("click", downloadPdf);
+
+    // İlk yükleme
+    loadData();
+</script>
+</body>
+</html>

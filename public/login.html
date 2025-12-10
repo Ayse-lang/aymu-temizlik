@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Aymu Panel Login</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #b71c1c, #d32f2f);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            width: 90%;
+            max-width: 380px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.25);
+            animation: fadeIn 0.6s ease;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            margin: 10px 0 25px;
+            color: #d32f2f;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            background: #f7f7f7;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+            input:focus {
+                border-color: #d32f2f;
+            }
+
+        #loginBtn {
+            width: 100%;
+            padding: 14px;
+            background: #d32f2f;
+            color: white;
+            font-size: 17px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+            #loginBtn:hover {
+                background: #b71c1c;
+            }
+
+        #errorMsg {
+            margin-top: 12px;
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+
+        <img class="logo" src="https://scontent.fecn1-1.fna.fbcdn.net/v/t39.30808-6/359451601_756843066403651_3936054015145188865_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=q9KN4Aek5RcQ7kNvwGSJOpE&_nc_oc=AdkdLNDLwIHRIahfkNDVALDNzD_ZRSA4s4D-fvfNBW7NodDDfEcBcarL93ekKC6BmHk&_nc_zt=23&_nc_ht=scontent.fecn1-1.fna&_nc_gid=PqZhcGTAD1w3SCeY7Gppmg&oh=00_AfiTDP67wv4Tb10FpEvMnwvas-a7kAZSBXHniGzj_D9Z2w&oe=6932151E" alt="Aymu Logo">
+
+        <h2>Aymu Cleaning Panel</h2>
+
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+
+        <button id="loginBtn">Login</button>
+
+        <div id="errorMsg">Wrong username or password ❌</div>
+    </div>
+
+    <script>
+    // Burada babanın kullanıcı adı ve şifresini ayarlıyoruz:
+    const VALID_USER = "aymu";      // İSTERSEN DEĞİŞTİR
+    const VALID_PASS = "1234";      // İSTERSEN DEĞİŞTİR
+
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const errorMsg = document.getElementById("errorMsg");
+
+    document.getElementById("loginBtn").onclick = () => {
+        const u = usernameInput.value.trim();
+        const p = passwordInput.value.trim();
+
+        if (u === VALID_USER && p === VALID_PASS) {
+            // Giriş başarılı → dashboard'a gönder
+            window.location.href = "dashboard.html";
+        } else {
+            // Hatalı giriş
+            errorMsg.style.display = "block";
+
+            // Küçük titreme animasyonu
+            const box = document.querySelector(".login-box");
+            box.style.animation = "none";
+            void box.offsetWidth; // reset
+            box.style.animation = "fadeIn 0.2s ease";
+
+            passwordInput.value = "";
+            passwordInput.focus();
+        }
+    };
+
+    // Enter'a basınca da login olsun
+    [usernameInput, passwordInput].forEach(el => {
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                document.getElementById("loginBtn").click();
+            }
+        });
+    });
+    </script>
+
+</body>
+</html>
