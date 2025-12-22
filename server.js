@@ -139,7 +139,9 @@ app.get("/api/admin/cleanings", (req, res) => {
 
 // ---------------------- WEBSOCKET SERVER ---------------
 
-const wss = new WebSocket.Server({ port: 8080 });
+// Modify WebSocket server to use the existing HTTP server
+const server = require("http").createServer(app);
+const wss = new WebSocket.Server({ server });
 
 wss.on("connection", ws => {
     console.log("Client connected");
@@ -155,6 +157,6 @@ wss.on("connection", ws => {
 
 // ---------------------- SERVER START --------------------
 
-app.listen(PORT, () => {
-    console.log("Server çalýþýyor: http://localhost:" + PORT);
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });
