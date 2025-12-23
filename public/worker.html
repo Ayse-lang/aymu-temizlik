@@ -184,87 +184,87 @@
     <a class="admin-link" href="login.html">🔐 Admin</a>
 
     <div class="container">
-        <img class="top-logo" 
-             src="/logo.png" 
-             alt="Aymu Logo">
+        <img class="top-logo" src="/logo.png" alt="Aymu Logo">
+    </div>
 
-        <h2>Aymu Cleaning</h2>
 
-        <!-- Cleaner -->
-        <label>Cleaner (सफा गर्ने)</label>
-        <select id="cleanerName">
-            <option>Sukra</option>
-            <option>Kancchi</option>
-            <option>Binita</option>
-        </select>
+    <h2>Aymu Cleaning</h2>
 
-        <!-- Block -->
-        <label>Block (ब्लक)</label>
-        <select id="block">
-            <option>A</option>
-            <option>B</option>
-            <option>C</option>
-            <option>D</option>
-            <option>E</option>
-            <option>F</option>
-            <option>G</option>
-            <option>H</option>
-            <option>I</option>
-            <option>J</option>
-        </select>
+    <!-- Cleaner -->
+    <label>Cleaner (सफा गर्ने)</label>
+    <select id="cleanerName">
+        <option>Sukra</option>
+        <option>Kancchi</option>
+        <option>Binita</option>
+    </select>
 
-        <!-- Flat Number -->
-        <label>Flat No (फ्ल्याट नम्बर)</label>
-        <input type="text" id="apartmentNumber">
+    <!-- Block -->
+    <label>Block (ब्लक)</label>
+    <select id="block">
+        <option>A</option>
+        <option>B</option>
+        <option>C</option>
+        <option>D</option>
+        <option>E</option>
+        <option>F</option>
+        <option>G</option>
+        <option>H</option>
+        <option>I</option>
+        <option>J</option>
+    </select>
 
-        <!-- Date -->
-        <label>Date (मिति)</label>
-        <input type="date" id="cleaningDate">
+    <!-- Flat Number -->
+    <label>Flat No (फ्ल्याट नम्बर)</label>
+    <input type="text" id="apartmentNumber">
 
-        <!-- Time -->
-        <label>Time (समय)</label>
-        <input type="time" id="cleaningTime">
+    <!-- Date -->
+    <label>Date (मिति)</label>
+    <input type="date" id="cleaningDate">
 
-        <!-- Status -->
-        <label>Status (स्थिति)</label>
-        <select id="status">
-            <option value="normal">Normal (सामान्य)</option>
-            <option value="medium">A bit dirty (अलि फोहोर)</option>
-            <option value="very_dirty">Very dirty (धेरै फोहोर)</option>
-        </select>
+    <!-- Time -->
+    <label>Time (समय)</label>
+    <input type="time" id="cleaningTime">
 
-        <!-- Note -->
-        <label>Note (नोट)</label>
-        <textarea id="notes"></textarea>
+    <!-- Status -->
+    <label>Status (स्थिति)</label>
+    <select id="status">
+        <option value="normal">Normal (सामान्य)</option>
+        <option value="medium">A bit dirty (अलि फोहोर)</option>
+        <option value="very_dirty">Very dirty (धेरै फोहोर)</option>
+    </select>
 
-        <!-- Tenant Not Home -->
-        <div class="tenantRow">
-            <label for="tenantNotHome">Tenant not at home (घरमा नभएको)</label>
-            <input type="checkbox" id="tenantNotHome">
-        </div>
+    <!-- Note -->
+    <label>Note (नोट)</label>
+    <textarea id="notes"></textarea>
 
-        <!-- Signature -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-            <label style="margin:0;">Tenant signature (हस्ताक्षर)</label>
-            <button id="clearSignature">Clear</button>
-        </div>
+    <!-- Tenant Not Home -->
+    <div class="tenantRow">
+        <label for="tenantNotHome">Tenant not at home (घरमा नभएको)</label>
+        <input type="checkbox" id="tenantNotHome">
+    </div>
 
-        <div class="signatureBox">
-            <canvas id="signaturePad"></canvas>
-        </div>
+    <!-- Signature -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <label style="margin:0;">Tenant signature (हस्ताक्षर)</label>
+        <button id="clearSignature">Clear</button>
+    </div>
 
-        <!-- Photo (only Very Dirty) -->
-        <label id="photoLabel">Photos (only if very dirty)</label>
-        <input type="file" id="photos" multiple accept="image/*">
+    <div class="signatureBox">
+        <canvas id="signaturePad"></canvas>
+    </div>
 
-        <!-- Save Button -->
-        <button id="sendBtn">Save (बचत गर्नुहोस्)</button>
-        <p id="msg"></p>
+    <!-- Photo (only Very Dirty) -->
+    <label id="photoLabel">Photos (only if very dirty)</label>
+    <input type="file" id="photos" multiple accept="image/*">
 
-        <!-- Job Finished Button -->
-        <button id="jobFinishedBtn" style="width: 100%; padding: 14px; background: #4CAF50; border: none; color: white; margin-top: 15px; font-size: 18px; border-radius: 12px; cursor: pointer;">
-            Job Finished
-        </button>
+    <!-- Save Button -->
+    <button id="sendBtn">Save (बचत गर्नुहोस्)</button>
+    <p id="msg"></p>
+
+    <!-- Job Finished Button -->
+    <button id="jobFinishedBtn" style="width: 100%; padding: 14px; background: #4CAF50; border: none; color: white; margin-top: 15px; font-size: 18px; border-radius: 12px; cursor: pointer;">
+        Job Finished
+    </button>
 
     </div>
 
