@@ -1,6 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aymu Cleaning</title>
 
     <style>
@@ -13,6 +15,7 @@
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
+            min-height: 100vh;
         }
 
             /* Blur + karartma */
@@ -24,8 +27,29 @@
                 right: 0;
                 bottom: 0;
                 backdrop-filter: blur(10px);
-                background: rgba(0,0,0,0.35);
+                background: rgba(0, 0, 0, 0.35);
                 z-index: 0;
+            }
+
+        .admin-link {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            z-index: 50;
+            padding: 6px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+            .admin-link:hover {
+                background: rgba(255, 255, 255, 0.45);
             }
 
         .container {
@@ -37,11 +61,11 @@
             background: white;
             padding: 25px;
             border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.25);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
         }
 
-        .logo {
-            width: 150px;
+        .top-logo {
+            width: 130px;
             display: block;
             margin: 0 auto 10px auto;
         }
@@ -49,7 +73,7 @@
         h2 {
             text-align: center;
             color: #d32f2f;
-            margin-bottom: 20px;
+            margin: 10px 0 20px 0;
         }
 
         label {
@@ -100,7 +124,7 @@
             font-size: 13px;
         }
 
-        /* Tenant not at home row: yazı solda, tik sağda */
+        /* Tenant not at home row */
         .tenantRow {
             display: flex;
             justify-content: space-between;
@@ -150,297 +174,271 @@
             margin-top: 15px;
         }
     </style>
-    <style>
-        .admin-link {
-            position: absolute;
-            top: 40px;       /* Kartın yukarısına göre ayarlandı */
-            left: 20px;      /* Tam gösterdiğin yere gelecek */
-            z-index: 50;
-            padding: 6px 14px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.25);
-            border: 1px solid rgba(255,255,255,0.6);
-            color: #fff;
-            font-size: 14px;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            text-decoration: none;
-            transition: .2s;
-        }
-
-        .admin-link:hover {
-            background: rgba(255,255,255,0.45);
-        }
-
-        .top-logo {
-            width: 130px; /* Kare dev gibi olmasın diye biraz küçülttüm */
-            display: block;
-            margin: 0 auto 10px auto;
-        }
-    </style>
 </head>
-<body>
 
+<body>
     <a class="admin-link" href="login.html">🔐 Admin</a>
 
     <div class="container">
-        <img class="top-logo" src="/logo.png" alt="Aymu Logo">
+        <img class="top-logo" src="/logo.png" alt="Aymu Logo" />
+
+        <h2>Aymu Cleaning</h2>
+
+        <!-- Cleaner -->
+        <label>Cleaner (सफा गर्ने)</label>
+        <select id="cleanerName">
+            <option>Sukra</option>
+            <option>Kancchi</option>
+            <option>Binita</option>
+        </select>
+
+        <!-- Block -->
+        <label>Block (ब्लक)</label>
+        <select id="block">
+            <option>A</option>
+            <option>B</option>
+            <option>C</option>
+            <option>D</option>
+            <option>E</option>
+            <option>F</option>
+            <option>G</option>
+            <option>H</option>
+            <option>I</option>
+            <option>J</option>
+        </select>
+
+        <!-- Flat Number -->
+        <label>Flat No (फ्ल्याट नम्बर)</label>
+        <input type="text" id="apartmentNumber" />
+
+        <!-- Date -->
+        <label>Date (मिति)</label>
+        <input type="date" id="cleaningDate" />
+
+        <!-- Time -->
+        <label>Time (समय)</label>
+        <input type="time" id="cleaningTime" />
+
+        <!-- Status -->
+        <label>Status (स्थिति)</label>
+        <select id="status">
+            <option value="normal">Normal (सामान्य)</option>
+            <option value="medium">A bit dirty (अलि फोहोर)</option>
+            <option value="very_dirty">Very dirty (धेरै फोहोर)</option>
+        </select>
+
+        <!-- Note -->
+        <label>Note (नोट)</label>
+        <textarea id="notes"></textarea>
+
+        <!-- Tenant Not Home -->
+        <div class="tenantRow">
+            <label for="tenantNotHome">Tenant not at home (घरमा नभएको)</label>
+            <input type="checkbox" id="tenantNotHome" />
+        </div>
+
+        <!-- Signature -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <label style="margin:0;">Tenant signature (हस्ताक्षर)</label>
+            <button id="clearSignature" type="button">Clear</button>
+        </div>
+
+        <div class="signatureBox">
+            <canvas id="signaturePad"></canvas>
+        </div>
+
+        <!-- Photo (only Very Dirty) -->
+        <label id="photoLabel">Photos (only if very dirty)</label>
+        <input type="file" id="photos" multiple accept="image/*" />
+
+        <!-- Save Button -->
+        <button id="sendBtn" type="button">Save (बचत गर्नुहोस्)</button>
+        <p id="msg"></p>
+
+        <!-- Job Finished Button -->
+        <button id="jobFinishedBtn"
+                type="button"
+                style="width: 100%; padding: 14px; background: #4CAF50; border: none; color: white; margin-top: 15px; font-size: 18px; border-radius: 12px; cursor: pointer;">
+            Job Finished
+        </button>
     </div>
 
+    <script>
+        // Elementleri çekelim
+        const cleanerName = document.getElementById("cleanerName");
+        const block = document.getElementById("block");
+        const apartmentNo = document.getElementById("apartmentNumber");
+        const cleaningDate = document.getElementById("cleaningDate");
+        const cleaningTime = document.getElementById("cleaningTime");
+        const statusField = document.getElementById("status");
+        const notes = document.getElementById("notes");
+        const tenantNotHome = document.getElementById("tenantNotHome");
+        const photosInput = document.getElementById("photos");
+        const photoLabel = document.getElementById("photoLabel");
+        const msg = document.getElementById("msg");
 
-    <h2>Aymu Cleaning</h2>
+        // Signature pad
+        const canvas = document.getElementById("signaturePad");
+        const ctx = canvas.getContext("2d");
 
-    <!-- Cleaner -->
-    <label>Cleaner (सफा गर्ने)</label>
-    <select id="cleanerName">
-        <option>Sukra</option>
-        <option>Kancchi</option>
-        <option>Binita</option>
-    </select>
-
-    <!-- Block -->
-    <label>Block (ब्लक)</label>
-    <select id="block">
-        <option>A</option>
-        <option>B</option>
-        <option>C</option>
-        <option>D</option>
-        <option>E</option>
-        <option>F</option>
-        <option>G</option>
-        <option>H</option>
-        <option>I</option>
-        <option>J</option>
-    </select>
-
-    <!-- Flat Number -->
-    <label>Flat No (फ्ल्याट नम्बर)</label>
-    <input type="text" id="apartmentNumber">
-
-    <!-- Date -->
-    <label>Date (मिति)</label>
-    <input type="date" id="cleaningDate">
-
-    <!-- Time -->
-    <label>Time (समय)</label>
-    <input type="time" id="cleaningTime">
-
-    <!-- Status -->
-    <label>Status (स्थिति)</label>
-    <select id="status">
-        <option value="normal">Normal (सामान्य)</option>
-        <option value="medium">A bit dirty (अलि फोहोर)</option>
-        <option value="very_dirty">Very dirty (धेरै फोहोर)</option>
-    </select>
-
-    <!-- Note -->
-    <label>Note (नोट)</label>
-    <textarea id="notes"></textarea>
-
-    <!-- Tenant Not Home -->
-    <div class="tenantRow">
-        <label for="tenantNotHome">Tenant not at home (घरमा नभएको)</label>
-        <input type="checkbox" id="tenantNotHome">
-    </div>
-
-    <!-- Signature -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-        <label style="margin:0;">Tenant signature (हस्ताक्षर)</label>
-        <button id="clearSignature">Clear</button>
-    </div>
-
-    <div class="signatureBox">
-        <canvas id="signaturePad"></canvas>
-    </div>
-
-    <!-- Photo (only Very Dirty) -->
-    <label id="photoLabel">Photos (only if very dirty)</label>
-    <input type="file" id="photos" multiple accept="image/*">
-
-    <!-- Save Button -->
-    <button id="sendBtn">Save (बचत गर्नुहोस्)</button>
-    <p id="msg"></p>
-
-    <!-- Job Finished Button -->
-    <button id="jobFinishedBtn" style="width: 100%; padding: 14px; background: #4CAF50; border: none; color: white; margin-top: 15px; font-size: 18px; border-radius: 12px; cursor: pointer;">
-        Job Finished
-    </button>
-
-    </div>
-
-</body>
-<script>
-    // Elementleri çekelim
-    const cleanerName = document.getElementById("cleanerName");
-    const block = document.getElementById("block");
-    const apartmentNo = document.getElementById("apartmentNumber");
-    const cleaningDate = document.getElementById("cleaningDate");
-    const cleaningTime = document.getElementById("cleaningTime");
-    const statusField = document.getElementById("status");
-    const notes = document.getElementById("notes");
-    const tenantNotHome = document.getElementById("tenantNotHome");
-    const photosInput = document.getElementById("photos");
-    const photoLabel = document.getElementById("photoLabel");
-    const msg = document.getElementById("msg");
-
-    // Signature pad
-    const canvas = document.getElementById("signaturePad");
-    const ctx = canvas.getContext("2d");
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    let drawing = false;
-    let hasSignature = false;
-
-    canvas.addEventListener("mousedown", () => { drawing = true; });
-    canvas.addEventListener("mouseup", () => { drawing = false; ctx.beginPath(); });
-    canvas.addEventListener("mousemove", draw);
-
-    function draw(e) {
-        if (!drawing) return;
-        hasSignature = true;
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "#000";
-        ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(e.offsetX, e.offsetY);
-    }
-
-    document.getElementById("clearSignature").onclick = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-        hasSignature = false;
-    };
-
-    const signatureBox = document.querySelector(".signatureBox");
-
-    // Tenant not at home → imza alanını kilitle
-    tenantNotHome.addEventListener("change", () => {
-        if (tenantNotHome.checked) {
-            signatureBox.classList.add("disabled");
-        } else {
-            signatureBox.classList.remove("disabled");
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
         }
-    });
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
 
-    // Fotoğraf alanını sadece very_dirty için göster
-    function updatePhotoVisibility() {
-        if (statusField.value !== "very_dirty") {
-            photosInput.style.display = "none";
-            photoLabel.style.display = "none";
-        } else {
-            photosInput.style.display = "block";
-            photoLabel.style.display = "block";
-        }
-    }
-    statusField.addEventListener("change", updatePhotoVisibility);
-    updatePhotoVisibility();
+        let drawing = false;
+        let hasSignature = false;
 
-    // Tarih & saat otomatik doldur
-    const now = new Date();
-    cleaningDate.value = now.toISOString().slice(0, 10);
-    cleaningTime.value = now.toTimeString().slice(0, 5);
+        canvas.addEventListener("mousedown", () => { drawing = true; });
+        canvas.addEventListener("mouseup", () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener("mousemove", draw);
 
-    // Formu gönder
-    document.getElementById("sendBtn").onclick = async () => {
-        msg.textContent = "";
-
-        if (!apartmentNo.value.trim()) {
-            alert("Flat number is required.");
-            return;
+        function draw(e) {
+            if (!drawing) return;
+            hasSignature = true;
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#000";
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
         }
 
-        // Kiracı evdeyse ve imza yoksa uyar:
-        if (!tenantNotHome.checked && !hasSignature) {
-            alert("Signature is required if tenant is at home.");
-            return;
-        }
+        document.getElementById("clearSignature").onclick = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            hasSignature = false;
+        };
 
-        const fd = new FormData();
-        fd.append("cleanerName", cleanerName.value);
-        fd.append("block", block.value);
-        fd.append("apartmentNumber", apartmentNo.value);
-        fd.append("status", statusField.value);
-        fd.append("notes", notes.value);
-        fd.append("cleaningDate", cleaningDate.value);
-        fd.append("cleaningTime", cleaningTime.value);
-        fd.append("tenantNotHome", tenantNotHome.checked ? "true" : "false");
+        const signatureBox = document.querySelector(".signatureBox");
 
-        // Kiracı evdeyse ve imza varsa tenantSigned=true + imzayı gönder
-        // Evde değilse tenantSigned=false + imza boş string
-        let tenantSigned = "false";
-        let tenantSignature = "";
-
-        if (!tenantNotHome.checked && hasSignature) {
-            tenantSigned = "true";
-            tenantSignature = canvas.toDataURL("image/png");
-        }
-
-        fd.append("tenantSigned", tenantSigned);
-        fd.append("tenantSignature", tenantSignature);
-
-        // Fotoğraf sadece very_dirty ise
-        if (statusField.value === "very_dirty") {
-            for (let f of photosInput.files) {
-                fd.append("photos", f);
-            }
-        }
-
-        try {
-            const res = await fetch("/api/cleanings", { method: "POST", body: fd });
-            const data = await res.json();
-
-            if (data.success) {
-                msg.style.color = "green";
-                msg.textContent = "Saved successfully ✅";
-
-                apartmentNo.value = "";
-                notes.value = "";
-                tenantNotHome.checked = false;
+        // Tenant not at home → imza alanını kilitle
+        tenantNotHome.addEventListener("change", () => {
+            if (tenantNotHome.checked) {
+                signatureBox.classList.add("disabled");
+            } else {
                 signatureBox.classList.remove("disabled");
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.beginPath();
-                hasSignature = false;
-                photosInput.value = "";
-                statusField.value = "normal";
-                updatePhotoVisibility();
+            }
+        });
+
+        // Fotoğraf alanını sadece very_dirty için göster
+        function updatePhotoVisibility() {
+            if (statusField.value !== "very_dirty") {
+                photosInput.style.display = "none";
+                photoLabel.style.display = "none";
             } else {
+                photosInput.style.display = "block";
+                photoLabel.style.display = "block";
+            }
+        }
+        statusField.addEventListener("change", updatePhotoVisibility);
+        updatePhotoVisibility();
+
+        // Tarih & saat otomatik doldur
+        const now = new Date();
+        cleaningDate.value = now.toISOString().slice(0, 10);
+        cleaningTime.value = now.toTimeString().slice(0, 5);
+
+        // Formu gönder
+        document.getElementById("sendBtn").onclick = async () => {
+            msg.textContent = "";
+
+            if (!apartmentNo.value.trim()) {
+                alert("Flat number is required.");
+                return;
+            }
+
+            // Kiracı evdeyse ve imza yoksa uyar:
+            if (!tenantNotHome.checked && !hasSignature) {
+                alert("Signature is required if tenant is at home.");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("cleanerName", cleanerName.value);
+            fd.append("block", block.value);
+            fd.append("apartmentNumber", apartmentNo.value);
+            fd.append("status", statusField.value);
+            fd.append("notes", notes.value);
+            fd.append("cleaningDate", cleaningDate.value);
+            fd.append("cleaningTime", cleaningTime.value);
+            fd.append("tenantNotHome", tenantNotHome.checked ? "true" : "false");
+
+            let tenantSigned = "false";
+            let tenantSignature = "";
+
+            if (!tenantNotHome.checked && hasSignature) {
+                tenantSigned = "true";
+                tenantSignature = canvas.toDataURL("image/png");
+            }
+
+            fd.append("tenantSigned", tenantSigned);
+            fd.append("tenantSignature", tenantSignature);
+
+            if (statusField.value === "very_dirty") {
+                for (let f of photosInput.files) {
+                    fd.append("photos", f);
+                }
+            }
+
+            try {
+                const res = await fetch("/api/cleanings", { method: "POST", body: fd });
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.style.color = "green";
+                    msg.textContent = "Saved successfully ✅";
+
+                    apartmentNo.value = "";
+                    notes.value = "";
+                    tenantNotHome.checked = false;
+                    signatureBox.classList.remove("disabled");
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.beginPath();
+                    hasSignature = false;
+                    photosInput.value = "";
+                    statusField.value = "normal";
+                    updatePhotoVisibility();
+                } else {
+                    msg.style.color = "red";
+                    msg.textContent = "Error: " + (data.error || "Unknown error");
+                }
+            } catch (e) {
                 msg.style.color = "red";
-                msg.textContent = "Error: " + (data.error || "Unknown error");
+                msg.textContent = "Server not reachable ❌";
             }
-        } catch (e) {
-            msg.style.color = "red";
-            msg.textContent = "Server not reachable ❌";
-        }
-    };
+        };
 
-    // Job Finished button functionality
-    document.getElementById("jobFinishedBtn").onclick = async () => {
-        const cleaner = cleanerName.value;
+        // Job Finished button functionality (Railway için localhost yok!)
+        document.getElementById("jobFinishedBtn").onclick = async () => {
+            const cleaner = cleanerName.value;
 
-        if (!cleaner) {
-            alert("Cleaner name is required.");
-            return;
-        }
-
-        try {
-            const res = await fetch("http://localhost:3000/api/job-finished", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ cleanerName: cleaner })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                alert("Job marked as finished successfully ✅");
-            } else {
-                alert("Error: " + (data.error || "Unknown error"));
+            if (!cleaner) {
+                alert("Cleaner name is required.");
+                return;
             }
-        } catch (e) {
-            alert("Server not reachable ❌");
-        }
-    };
-</script>
+
+            try {
+                const res = await fetch("/api/job-finished", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ cleanerName: cleaner })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("Job marked as finished successfully ✅");
+                } else {
+                    alert("Error: " + (data.error || "Unknown error"));
+                }
+            } catch (e) {
+                alert("Server not reachable ❌");
+            }
+        };
+    </script>
+</body>
+</html>
