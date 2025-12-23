@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- DEPLOY TEST -->
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -98,6 +99,7 @@
 
         <img class="logo" src="/logo.png" alt="Aymu Logo">
 
+
         <h2>Aymu Cleaning Panel</h2>
 
         <input type="text" id="username" placeholder="Username">
@@ -109,44 +111,44 @@
     </div>
 
     <script>
-    // Burada babanın kullanıcı adı ve şifresini ayarlıyoruz:
-    const VALID_USER = "aymu";      // İSTERSEN DEĞİŞTİR
-    const VALID_PASS = "1234";      // İSTERSEN DEĞİŞTİR
+        // Burada babanın kullanıcı adı ve şifresini ayarlıyoruz:
+        const VALID_USER = "aymu";      // İSTERSEN DEĞİŞTİR
+        const VALID_PASS = "1234";      // İSTERSEN DEĞİŞTİR
 
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
-    const errorMsg = document.getElementById("errorMsg");
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const errorMsg = document.getElementById("errorMsg");
 
-    document.getElementById("loginBtn").onclick = () => {
-        const u = usernameInput.value.trim();
-        const p = passwordInput.value.trim();
+        document.getElementById("loginBtn").onclick = () => {
+            const u = usernameInput.value.trim();
+            const p = passwordInput.value.trim();
 
-        if (u === VALID_USER && p === VALID_PASS) {
-            // Giriş başarılı → dashboard'a gönder
-            window.location.href = "dashboard.html";
-        } else {
-            // Hatalı giriş
-            errorMsg.style.display = "block";
+            if (u === VALID_USER && p === VALID_PASS) {
+                // Giriş başarılı → dashboard'a gönder
+                window.location.href = "dashboard.html";
+            } else {
+                // Hatalı giriş
+                errorMsg.style.display = "block";
 
-            // Küçük titreme animasyonu
-            const box = document.querySelector(".login-box");
-            box.style.animation = "none";
-            void box.offsetWidth; // reset
-            box.style.animation = "fadeIn 0.2s ease";
+                // Küçük titreme animasyonu
+                const box = document.querySelector(".login-box");
+                box.style.animation = "none";
+                void box.offsetWidth; // reset
+                box.style.animation = "fadeIn 0.2s ease";
 
-            passwordInput.value = "";
-            passwordInput.focus();
-        }
-    };
-
-    // Enter'a basınca da login olsun
-    [usernameInput, passwordInput].forEach(el => {
-        el.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                document.getElementById("loginBtn").click();
+                passwordInput.value = "";
+                passwordInput.focus();
             }
+        };
+
+        // Enter'a basınca da login olsun
+        [usernameInput, passwordInput].forEach(el => {
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    document.getElementById("loginBtn").click();
+                }
+            });
         });
-    });
     </script>
 
 </body>
