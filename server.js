@@ -225,13 +225,6 @@ wss.on("connection", (ws) => {
 
 // ---------------------- SERVER START --------------------
 
-initDB()
-    .then(() => {
-        server.listen(PORT, "0.0.0.0", () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-    })
-    .catch((e) => {
-        console.error("DB INIT ERROR:", e);
-        process.exit(1);
-    });
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(Server running on port ${ PORT });
+});
