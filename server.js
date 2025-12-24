@@ -14,8 +14,11 @@ const PORT = process.env.PORT || 3000;
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: process.env.DATABASE_URL
+        ? { rejectUnauthorized: false }
+        : false,
 });
+
 
 async function initDB() {
     await pool.query(`
@@ -80,9 +83,14 @@ app.get("/api/db-test", async (req, res) => {
         const r = await pool.query("SELECT NOW()");
         res.json({ ok: true, time: r.rows[0] });
     } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
+        console.error("DB TEST ERROR:", e);
+        res.status(500).json({
+            ok: false,
+            error: e?.message || "unknown db error",
+        });
     }
 });
+
 
 // ---------------------- API: KAYIT EKLE ----------------
 
