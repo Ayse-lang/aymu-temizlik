@@ -80,6 +80,7 @@ app.post("/api/cleanings", upload.array("photos", 5), (req, res) => {
             tenantNotHome: tenantNotHome === "true",
             tenantSigned: tenantSigned === "true",
             tenantSignature: tenantSignature || "",
+            cleaningRequest: req.body.cleaningRequest || "requested",
             photos,
             createdAt: new Date().toISOString()
         };

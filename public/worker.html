@@ -133,6 +133,10 @@
             height: 100%;
         }
 
+        #signaturePad {
+            touch-action: none;
+        }
+
         #clearSignature {
             background: #e53935;
             color: white;
@@ -251,6 +255,13 @@
             <option value="very_dirty">Very dirty (धेरै फोहोर)</option>
         </select>
 
+        <!-- Cleaning Request -->
+        <label>Cleaning request (temizlik talebi)</label>
+        <select id="cleaningRequest">
+            <option value="requested">Requested (İstendi)</option>
+            <option value="not_requested">Not requested (İstenmedi)</option>
+        </select>
+
         <!-- Note -->
         <label>Note (नोट)</label>
         <textarea id="notes"></textarea>
@@ -301,13 +312,26 @@
         const photoLabel = document.getElementById("photoLabel");
         const msg = document.getElementById("msg");
 
+        // ✅ NEW: temizlik istendi mi?
+        const cleaningRequest = document.getElementById("cleaningRequest");
+
         // Signature pad
         const canvas = document.getElementById("signaturePad");
         const ctx = canvas.getContext("2d");
+        const signatureBox = document.querySelector(".signatureBox");
+        const clearBtn = document.getElementById("clearSignature");
 
+        // Canvas gerçek pixel boyutunu ayarla (retina dahil)
         function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            const ratio = window.devicePixelRatio || 1;
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+            canvas.width = Math.floor(w * ratio);
+            canvas.height = Math.floor(h * ratio);
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0); // koordinatlar CSS px gibi kalsın
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#000";
         }
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
@@ -315,31 +339,82 @@
         let drawing = false;
         let hasSignature = false;
 
-        canvas.addEventListener("mousedown", () => { drawing = true; });
-        canvas.addEventListener("mouseup", () => { drawing = false; ctx.beginPath(); });
-        canvas.addEventListener("mousemove", draw);
-
-        function draw(e) {
-            if (!drawing) return;
-            hasSignature = true;
-            ctx.lineWidth = 3;
-            ctx.lineCap = "round";
-            ctx.strokeStyle = "#000";
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(e.offsetX, e.offsetY);
+        function getPos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            // touch
+            if (evt.touches && evt.touches[0]) {
+                return {
+                    x: evt.touches[0].clientX - rect.left,
+                    y: evt.touches[0].clientY - rect.top
+                };
+            }
+            // mouse
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
         }
 
-        document.getElementById("clearSignature").onclick = () => {
+        function startDraw(e) {
+            if (signatureBox.classList.contains("disabled")) return;
+            drawing = true;
+            const p = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            hasSignature = true;
+            e.preventDefault();
+        }
+
+        function moveDraw(e) {
+            if (!drawing) return;
+            if (signatureBox.classList.contains("disabled")) return;
+            const p = getPos(e);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            e.preventDefault();
+        }
+
+        function endDraw(e) {
+            drawing = false;
+            e.preventDefault();
+        }
+
+        // ✅ Mouse events
+        canvas.addEventListener("mousedown", startDraw);
+        canvas.addEventListener("mousemove", moveDraw);
+        window.addEventListener("mouseup", endDraw);
+
+        // ✅ Touch events (TELEFON İÇİN ŞART)
+        canvas.addEventListener("touchstart", startDraw, { passive: false });
+        canvas.addEventListener("touchmove", moveDraw, { passive: false });
+        canvas.addEventListener("touchend", endDraw, { passive: false });
+
+        clearBtn.onclick = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
             hasSignature = false;
         };
 
-        const signatureBox = document.querySelector(".signatureBox");
+        // ✅ İmza alanını sadece "temizlik istenmedi" seçilince aç
+        function updateSignatureVisibility() {
+            const notRequested = cleaningRequest.value === "not_requested";
 
-        // Tenant not at home → imza alanını kilitle
+            if (notRequested) {
+                signatureBox.style.display = "block";
+                clearBtn.style.display = "inline-block";
+            } else {
+                signatureBox.style.display = "none";
+                clearBtn.style.display = "none";
+                // imza kapandıysa temizle
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                hasSignature = false;
+            }
+        }
+
+        cleaningRequest.addEventListener("change", updateSignatureVisibility);
+
+        // Tenant not at home → imza alanını kilitle (ama sadece açıkken anlamlı)
         tenantNotHome.addEventListener("change", () => {
             if (tenantNotHome.checked) {
                 signatureBox.classList.add("disabled");
@@ -366,6 +441,9 @@
         cleaningDate.value = now.toISOString().slice(0, 10);
         cleaningTime.value = now.toTimeString().slice(0, 5);
 
+        // İlk açılışta imzayı kapat
+        updateSignatureVisibility();
+
         // Formu gönder
         document.getElementById("sendBtn").onclick = async () => {
             msg.textContent = "";
@@ -375,9 +453,11 @@
                 return;
             }
 
-            // Kiracı evdeyse ve imza yoksa uyar:
-            if (!tenantNotHome.checked && !hasSignature) {
-                alert("Signature is required if tenant is at home.");
+            const notRequested = cleaningRequest.value === "not_requested";
+
+            // ✅ KURAL: sadece temizlik istenmediyse imza zorunlu
+            if (notRequested && !tenantNotHome.checked && !hasSignature) {
+                alert("Signature is required when cleaning is NOT requested.");
                 return;
             }
 
@@ -391,10 +471,13 @@
             fd.append("cleaningTime", cleaningTime.value);
             fd.append("tenantNotHome", tenantNotHome.checked ? "true" : "false");
 
+            // ✅ yeni alan
+            fd.append("cleaningRequest", cleaningRequest.value);
+
             let tenantSigned = "false";
             let tenantSignature = "";
 
-            if (!tenantNotHome.checked && hasSignature) {
+            if (notRequested && !tenantNotHome.checked && hasSignature) {
                 tenantSigned = "true";
                 tenantSignature = canvas.toDataURL("image/png");
             }
@@ -403,9 +486,7 @@
             fd.append("tenantSignature", tenantSignature);
 
             if (statusField.value === "very_dirty") {
-                for (let f of photosInput.files) {
-                    fd.append("photos", f);
-                }
+                for (let f of photosInput.files) fd.append("photos", f);
             }
 
             try {
@@ -420,12 +501,14 @@
                     notes.value = "";
                     tenantNotHome.checked = false;
                     signatureBox.classList.remove("disabled");
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.beginPath();
-                    hasSignature = false;
+                    clearBtn.click();
                     photosInput.value = "";
                     statusField.value = "normal";
                     updatePhotoVisibility();
+
+                    // reset cleaning request to requested
+                    cleaningRequest.value = "requested";
+                    updateSignatureVisibility();
                 } else {
                     msg.style.color = "red";
                     msg.textContent = "Error: " + (data.error || "Unknown error");
@@ -436,10 +519,9 @@
             }
         };
 
-        // Job Finished button functionality (Railway için localhost yok!)
+        // Job Finished
         document.getElementById("jobFinishedBtn").onclick = async () => {
             const cleaner = cleanerName.value;
-
             if (!cleaner) {
                 alert("Cleaner name is required.");
                 return;
@@ -453,12 +535,8 @@
                 });
 
                 const data = await res.json();
-
-                if (data.success) {
-                    alert("Job marked as finished successfully ✅");
-                } else {
-                    alert("Error: " + (data.error || "Unknown error"));
-                }
+                if (data.success) alert("Job marked as finished successfully ✅");
+                else alert("Error: " + (data.error || "Unknown error"));
             } catch (e) {
                 alert("Server not reachable ❌");
             }
