@@ -23,7 +23,7 @@ app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
 // static dosyalar (public + uploads)
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 app.use("/uploads", express.static(uploadsDir));
 
 // root açýlýnca login sayfasýna at
