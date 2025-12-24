@@ -140,7 +140,7 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
         console.error("CLEANING ERROR:", err);
-        res.json({ success: false, error: err.message });
+        res.json({ success: false, error: err.message || "db insert error" });
     }
 });
 
@@ -158,49 +158,47 @@ app.get("/api/cleanings", async (req, res) => {
 // ---------------------- API: JOB FINISHED --------------
 
 app.post("/api/job-finished", async (req, res) => {
-    try {
-        const { cleanerName } = req.body;
-        if (!cleanerName) {
-            return res.json({ success: false, error: "Cleaner name is required." });
-        }
+  try {
+    const { cleanerName } = req.body;
+    if (!cleanerName) return res.json({ success: false, error: "Cleaner name is required." });
 
-        const r = await pool.query(
-            `INSERT INTO shiftEnds (cleanerName) VALUES ($1) RETURNING *`,
-            [cleanerName]
-        );
+    const r = await pool.query(
+      "INSERT INTO shiftEnds (cleanerName) VALUES ($1) RETURNING *",
+      [cleanerName]
+    );
 
-        res.json({ success: true, message: "Shift marked as finished.", data: r.rows[0] });
-    } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
+    res.json({ success: true, message: "Shift marked as finished.", data: r.rows[0] });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 app.get("/api/job-finished", async (req, res) => {
-    try {
-        const r = await pool.query("SELECT * FROM shiftEnds ORDER BY endedAt DESC");
-        res.json({ success: true, data: r.rows });
-    } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
+  try {
+    const r = await pool.query("SELECT * FROM shiftEnds ORDER BY endedAt DESC");
+    res.json({ success: true, data: r.rows });
+  } catch (e) {
+    res.status500).json({ success: false, error: e.message });
+  }
 });
 
 // ---------------------- API: ADMIN RAPOR ----------------
 
 app.get("/api/admin/cleanings", async (req, res) => {
-    try {
-        const c = await pool.query("SELECT * FROM cleanings ORDER BY createdAt DESC");
-        const s = await pool.query("SELECT * FROM shiftEnds ORDER BY endedAt DESC");
+  try {
+    const c = await pool.query("SELECT * FROM cleanings ORDER BY createdAt DESC");
+    const s = await pool.query("SELECT * FROM shiftEnds ORDER BY endedAt DESC");
 
-        res.json({
-            success: true,
-            data: {
-                cleanings: c.rows,
-                shiftEnds: s.rows,
-            },
-        });
-    } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
+    res.json({
+      success: true,
+      data: {
+        cleanings: c.rows,
+        shiftEnds: s.rows
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 // ---------------------- WEBSOCKET SERVER ---------------
