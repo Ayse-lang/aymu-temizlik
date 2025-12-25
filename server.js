@@ -149,15 +149,27 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
 app.get("/api/cleanings", async (req, res) => {
     try {
         const r = await pool.query(`
-            SELECT
-                id,
-                cleanername AS "cleanerName",
-                block,
-                apartmentnumber AS "apartmentNumber",
-                status
-            FROM cleanings
-            ORDER BY id DESC
-        `);
+      SELECT
+        id,
+        cleanername      AS "cleanerName",
+        block,
+        apartmentnumber  AS "apartmentNumber",
+        status,
+
+        cleaningdate     AS "cleaningDate",
+        cleaningtime     AS "cleaningTime",
+
+        cleaningrequest  AS "cleaningRequest",
+        tenantnothome    AS "tenantNotHome",
+        tenantsigned     AS "tenantSigned",
+        tenantsignature  AS "tenantSignature",
+
+        notes,
+        photos,
+        createdat        AS "createdAt"
+      FROM cleanings
+      ORDER BY id DESC
+    `);
 
         res.json({ success: true, data: r.rows });
     } catch (e) {

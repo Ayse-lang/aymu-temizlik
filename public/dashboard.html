@@ -313,11 +313,13 @@
 
     async function loadData() {
         try {
-            // 1) Cleanings’i çek
-            const resC = await fetch("/api/cleanings");
-            if (!resC.ok) throw new Error(`Cleanings HTTP ${resC.status}`);
-            const jsonC = await resC.json();
-            if (!jsonC.success) throw new Error(jsonC.error || "Cleanings failed");
+            // Corrected endpoint
+            const res = await fetch("/api/cleanings");
+            if (!res.ok) throw new Error(`Cleanings HTTP ${res.status}`);
+            
+            // Corrected response parsing
+            const json = await res.json();
+            allCleanings = json.data || [];
 
             // 2) ShiftEnds’i çek (endpoint varsa)
             let shiftEnds = [];
@@ -333,7 +335,7 @@
             }
 
             // dashboard’un beklediği formata uydur:
-            allCleanings = (jsonC.data || []).map(c => {
+            allCleanings = (allCleanings || []).map(c => {
                 // cleaningDate/Time yoksa idare etsin diye createdAt’dan üretelim
                 const dt = c.createdAt ? new Date(c.createdAt) : null;
                 const cleaningDate = c.cleaningDate || (dt ? dt.toISOString().slice(0, 10) : null);
