@@ -148,11 +148,23 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
 
 app.get("/api/cleanings", async (req, res) => {
     try {
-        res.status(501).json({ success: false, error: "This endpoint has been disabled." });
+        const r = await pool.query(`
+            SELECT
+                id,
+                cleanername AS "cleanerName",
+                block,
+                apartmentnumber AS "apartmentNumber",
+                status
+            FROM cleanings
+            ORDER BY id DESC
+        `);
+
+        res.json({ success: true, data: r.rows });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }
 });
+
 
 // ---------------------- API: JOB FINISHED --------------
 
