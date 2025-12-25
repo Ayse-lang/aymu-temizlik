@@ -480,6 +480,9 @@
             `;
 
             records.forEach(c => {
+                // cleaningRequest alanını normalize et
+                const cleaningRequest = c.cleaningRequest ?? c.cleaningrequest ?? "requested";
+
                 const tenantText = c.tenantNotHome
                     ? `<span class="tenant-not-home">Not at home</span>`
                     : (c.tenantName ? `<span class="tenant-home">${c.tenantName}</span>` : "-");
@@ -487,13 +490,13 @@
                 const noteText = c.notes && c.notes.trim() ? c.notes : "-";
 
                 const cleaningRequestText =
-                    c.cleaningRequest === "not_requested"
+                    cleaningRequest === "not_requested"
                         ? "Not requested ❌"
                         : "Requested ✅";
 
                 let signatureHTML = "—";
 
-                if (c.cleaningRequest === "not_requested") {
+                if (cleaningRequest === "not_requested") {
                     if (c.tenantSignature) {
                         signatureHTML = `<img src="${c.tenantSignature}" style="width:120px;border:1px solid #ccc;">`;
                     } else {
