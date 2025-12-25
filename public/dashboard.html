@@ -313,25 +313,51 @@
 
     async function loadData() {
         try {
-            const res = await fetch("/api/admin/cleanings");
+            // 1) Cleanings’i çek
+            const resC = await fetch("/api/cleanings");
+            if (!resC.ok) throw new Error(`Cleanings HTTP ${resC.status}`);
+            const jsonC = await resC.json();
+            if (!jsonC.success) throw new Error(jsonC.error || "Cleanings failed");
 
-            // Check for HTTP errors
-            if (!res.ok) {
-                throw new Error(`HTTP error! Status: ${res.status}`);
+            // 2) ShiftEnds’i çek (endpoint varsa)
+            let shiftEnds = [];
+            try {
+                const resS = await fetch("/api/job-finished");
+                if (resS.ok) {
+                    const jsonS = await resS.json();
+                    if (jsonS.success) shiftEnds = jsonS.data || [];
+                }
+            } catch (e) {
+                // shift endpoint yoksa sorun yapma
+                console.warn("ShiftEnds fetch skipped:", e);
             }
 
-            const json = await res.json();
+            // dashboard’un beklediği formata uydur:
+            allCleanings = (jsonC.data || []).map(c => {
+                // cleaningDate/Time yoksa idare etsin diye createdAt’dan üretelim
+                const dt = c.createdAt ? new Date(c.createdAt) : null;
+                const cleaningDate = c.cleaningDate || (dt ? dt.toISOString().slice(0, 10) : null);
+                const cleaningTime = c.cleaningTime || (dt ? dt.toTimeString().slice(0, 5) : null);
 
-            if (!json.success) {
-                summaryText.textContent = "Error loading data.";
-                return;
-            }
+                return {
+                    ...c,
+                    cleaningDate,
+                    cleaningTime,
+                    // dashboard bunları kullanıyor, yoksa boş kalsın:
+                    notes: c.notes ?? "",
+                    tenantName: c.tenantName ?? "",
+                    tenantNotHome: !!c.tenantNotHome,
+                    cleaningRequest: c.cleaningRequest ?? "requested",
+                    tenantSignature: c.tenantSignature ?? "",
+                    photos: Array.isArray(c.photos) ? c.photos : []
+                };
+            });
 
-            allCleanings = json.data.cleanings || [];
-            allShiftEnds = json.data.shiftEnds || [];
+            allShiftEnds = shiftEnds;
 
-            // Fill cleaner names in the filter dropdown
-            const cleaners = [...new Set(allCleanings.map(c => c.cleanerName))].sort();
+            // dropdown doldur
+            filterCleaner.innerHTML = '<option value="">All cleaners</option>';
+            const cleaners = [...new Set(allCleanings.map(c => c.cleanerName).filter(Boolean))].sort();
             cleaners.forEach(name => {
                 const opt = document.createElement("option");
                 opt.value = name;
