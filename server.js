@@ -148,8 +148,7 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
 
 app.get("/api/cleanings", async (req, res) => {
     try {
-        const r = await pool.query("SELECT * FROM cleanings ORDER BY createdAt DESC");
-        res.json({ success: true, data: r.rows });
+        res.status(501).json({ success: false, error: "This endpoint has been disabled." });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }
@@ -186,22 +185,33 @@ app.get("/api/job-finished", async (req, res) => {
 
 // ---------------------- API: ADMIN RAPOR ----------------
 
-app.get("/api/admin/cleanings", async (req, res) => {
+app.get("/api/cleanings", async (req, res) => {
     try {
-        const c = await pool.query("SELECT * FROM cleanings ORDER BY createdAt DESC");
-        const s = await pool.query("SELECT * FROM shiftEnds ORDER BY endedAt DESC");
-
-        res.json({
-            success: true,
-            data: {
-                cleanings: c.rows,
-                shiftEnds: s.rows,
-            },
-        });
+        const r = await pool.query(`
+  SELECT
+    id,
+    cleanername AS "cleanerName",
+    block,
+    apartmentnumber AS "apartmentNumber",
+    status,
+    notes,
+    cleaningdate AS "cleaningDate",
+    cleaningtime AS "cleaningTime",
+    tenantnothome AS "tenantNotHome",
+    tenantsigned AS "tenantSigned",
+    tenantsignature AS "tenantSignature",
+    cleaningrequest AS "cleaningRequest",
+    photos,
+    createdat AS "createdAt"
+  FROM cleanings
+  ORDER BY id DESC
+`);
+        res.json({ success: true, data: r.rows });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }
 });
+
 
 // ---------------------- WEBSOCKET SERVER ---------------
 

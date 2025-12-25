@@ -446,6 +446,7 @@
                             <th>Flat</th>
                             <th>Status</th>
                             <th>Tenant</th>
+                            <th>Cleaning Request</th>
                             <th>Signature</th>
                             <th>Photos</th>
                             <th>Note</th>
@@ -459,13 +460,21 @@
 
                 const noteText = c.notes && c.notes.trim() ? c.notes : "-";
 
-                let signatureCell = "-";
-                if (c.tenantNotHome) {
-                    signatureCell = "Tenant not at home";
-                } else if (c.tenantSigned && c.tenantSignature) {
-                    signatureCell = `<img src="${c.tenantSignature}" class="signature-img" alt="Signature">`;
-                } else if (c.tenantSigned && !c.tenantSignature) {
-                    signatureCell = "Signed (no image)";
+                const cleaningRequestText =
+                    c.cleaningRequest === "not_requested"
+                        ? "Not requested ❌"
+                        : "Requested ✅";
+
+                let signatureHTML = "—";
+
+                if (c.cleaningRequest === "not_requested") {
+                    if (c.tenantSignature) {
+                        signatureHTML = `<img src="${c.tenantSignature}" style="width:120px;border:1px solid #ccc;">`;
+                    } else {
+                        signatureHTML = `<span style="color:red;font-weight:bold">MISSING ❗</span>`;
+                    }
+                } else {
+                    signatureHTML = c.tenantSignature ? "Signed ✔️" : "No signature (OK)";
                 }
 
                 let photosCell = "-";
@@ -483,7 +492,8 @@
                         <td>${c.apartmentNumber || "-"}</td>
                         <td>${c.status || "-"}</td>
                         <td>${tenantText}</td>
-                        <td>${signatureCell}</td>
+                        <td>${cleaningRequestText}</td>
+                        <td>${signatureHTML}</td>
                         <td>${photosCell}</td>
                         <td>${noteText}</td>
                     </tr>
