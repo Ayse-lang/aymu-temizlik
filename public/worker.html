@@ -286,6 +286,16 @@
         <label id="photoLabel">Photos (only if very dirty)</label>
         <input type="file" id="photos" multiple accept="image/*" />
 
+        <!-- Add the problem checkbox and area -->
+        <label style="margin-top:10px;">
+          <input type="checkbox" id="hasProblem" />
+          Arıza / Problem var
+        </label>
+        <div id="problemArea" style="display:none; margin-top:10px;">
+          <textarea id="problemNote" placeholder="Arıza açıklaması"></textarea>
+          <input type="file" id="problemPhoto" accept="image/*" />
+        </div>
+
         <!-- Save Button -->
         <button id="sendBtn" type="button">Save (बचत गर्नुहोस्)</button>
         <p id="msg"></p>
@@ -444,6 +454,14 @@
         // İlk açılışta imzayı kapat
         updateSignatureVisibility();
 
+        // Toggle visibility of the problem area
+        const hasProblem = document.getElementById("hasProblem");
+        const problemArea = document.getElementById("problemArea");
+
+        hasProblem.addEventListener("change", () => {
+            problemArea.style.display = hasProblem.checked ? "block" : "none";
+        });
+
         // Formu gönder
         document.getElementById("sendBtn").onclick = async () => {
             msg.textContent = "";
@@ -489,6 +507,15 @@
                 for (let f of photosInput.files) fd.append("photos", f);
             }
 
+            // Append problem-related fields to FormData
+            fd.append("hasProblem", hasProblem.checked);
+            fd.append("problemNote", document.getElementById("problemNote").value);
+
+            const problemPhoto = document.getElementById("problemPhoto");
+            if (problemPhoto.files[0]) {
+                fd.append("problemPhoto", problemPhoto.files[0]);
+            }
+
             try {
                 const res = await fetch("/api/cleanings", { method: "POST", body: fd });
                 const data = await res.json();
@@ -509,6 +536,12 @@
                     // reset cleaning request to requested
                     cleaningRequest.value = "requested";
                     updateSignatureVisibility();
+
+                    // reset problem fields
+                    hasProblem.checked = false;
+                    problemArea.style.display = "none";
+                    document.getElementById("problemNote").value = "";
+                    problemPhoto.value = "";
                 } else {
                     msg.style.color = "red";
                     msg.textContent = "Error: " + (data.error || "Unknown error");

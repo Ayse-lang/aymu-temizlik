@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
@@ -6,6 +6,8 @@ const fs = require("fs");
 const WebSocket = require("ws");
 const http = require("http");
 const { Pool } = require("pg");
+const nodemailer = require("nodemailer");
+const cron = require("node-cron");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,7 +51,7 @@ async function initDB() {
   `);
 }
 
-// ---------------------- KLAS�RLER ----------------------
+// ---------------------- KLASÖRLER ----------------------
 
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
@@ -76,6 +78,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+const uploadFields = upload.fields([
+    { name: "photos", maxCount: 10 },
+    { name: "problemPhoto", maxCount: 1 },
+]);
+
 // ---------------------- DB TEST ------------------------
 
 app.get("/api/db-test", async (req, res) => {
@@ -94,7 +101,14 @@ app.get("/api/db-test", async (req, res) => {
 
 // ---------------------- API: KAYIT EKLE ----------------
 
-app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
+app.post("/api/cleanings", upload.fields([
+    { name: "photos", maxCount: 10 },
+    { name: "problemPhoto", maxCount: 1 }
+]), async (req, res) => {
+    // Add logging for debugging
+    console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
+
     try {
         const {
             cleanerName,
@@ -105,12 +119,19 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
             cleaningDate,
             cleaningTime,
             tenantNotHome,
+            cleaningRequest,
             tenantSigned,
             tenantSignature,
-            cleaningRequest,
+            hasProblem,
+            problemNote,
         } = req.body;
 
-        const photos = (req.files || []).map((f) => "/uploads/" + f.filename);
+        const photos = (req.files?.photos || []).map(f => `/uploads/${f.filename}`);
+        const problemPhoto = (req.files?.problemPhoto?.[0])
+            ? `/uploads/${req.files.problemPhoto[0].filename}`
+            : null;
+
+        const hasProblemBool = String(hasProblem) === "true";
 
         const result = await pool.query(
             `
@@ -137,6 +158,18 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
             ]
         );
 
+        if (hasProblemBool) {
+            console.log("🚨 Problem reported:", {
+                block,
+                apartmentNumber,
+                problemNote,
+                problemPhoto,
+            });
+
+            // Here you can call a function to send a WhatsApp message
+            // sendProblemWhatsApp({ block, apartmentNumber, problemNote, problemPhoto });
+        }
+
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
         console.error("CLEANING ERROR:", err);
@@ -144,29 +177,29 @@ app.post("/api/cleanings", upload.array("photos", 5), async (req, res) => {
     }
 });
 
-// ---------------------- API: T�M KAYITLAR --------------
+// ---------------------- API: TÜM KAYITLAR --------------
 
 app.get("/api/cleanings", async (req, res) => {
     try {
         const r = await pool.query(`
       SELECT
         id,
-        cleanername      AS "cleanerName",
+        "cleanerName"      AS "cleanerName",
         block,
-        apartmentnumber  AS "apartmentNumber",
+        "apartmentNumber"  AS "apartmentNumber",
         status,
 
-        cleaningdate     AS "cleaningDate",
-        cleaningtime     AS "cleaningTime",
+        "cleaningDate"     AS "cleaningDate",
+        "cleaningTime"     AS "cleaningTime",
 
-        cleaningrequest  AS "cleaningRequest",
-        tenantnothome    AS "tenantNotHome",
-        tenantsigned     AS "tenantSigned",
-        tenantsignature  AS "tenantSignature",
+        "cleaningRequest"  AS "cleaningRequest",
+        "tenantNotHome"    AS "tenantNotHome",
+        "tenantSigned"     AS "tenantSigned",
+        "tenantSignature"  AS "tenantSignature",
 
         notes,
         photos,
-        createdat        AS "createdAt"
+        "createdAt"        AS "createdAt"
       FROM cleanings
       ORDER BY id DESC
     `);
@@ -207,35 +240,78 @@ app.get("/api/job-finished", async (req, res) => {
     }
 });
 
-// ---------------------- API: ADMIN RAPOR ----------------
-
-app.get("/api/cleanings", async (req, res) => {
+// ---------------------- API: ADMIN CLEANINGS --------------
+app.get("/api/admin/cleanings", async (req, res) => {
     try {
         const r = await pool.query(`
-  SELECT
-    id,
-    cleanername AS "cleanerName",
-    block,
-    apartmentnumber AS "apartmentNumber",
-    status,
-    notes,
-    cleaningdate AS "cleaningDate",
-    cleaningtime AS "cleaningTime",
-    tenantnothome AS "tenantNotHome",
-    tenantsigned AS "tenantSigned",
-    tenantsignature AS "tenantSignature",
-    cleaningrequest AS "cleaningRequest",
-    photos,
-    createdat AS "createdAt"
-  FROM cleanings
-  ORDER BY id DESC
-`);
+      SELECT
+        id,
+        "cleanerName"      AS "cleanerName",
+        block,
+        "apartmentNumber"  AS "apartmentNumber",
+        status,
+
+        "cleaningDate"     AS "cleaningDate",
+        "cleaningTime"     AS "cleaningTime",
+
+        "cleaningRequest"  AS "cleaningRequest",
+        "tenantNotHome"    AS "tenantNotHome",
+        "tenantSigned"     AS "tenantSigned",
+        "tenantSignature"  AS "tenantSignature",
+
+        notes,
+        photos,
+        "createdAt"        AS "createdAt"
+      FROM cleanings
+      ORDER BY id DESC
+    `);
+
         res.json({ success: true, data: r.rows });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
+// 📩 Mail gönderici fonksiyon
+async function sendDailyReport() {
+    const today = new Date().toISOString().slice(0, 10);
+
+    const r = await pool.query(`
+        SELECT cleanername, COUNT(*) as total
+        FROM cleanings
+        WHERE cleaningdate = $1
+        GROUP BY cleanername
+    `, [today]);
+
+    if (r.rows.length === 0) {
+        console.log("No cleanings today, mail not sent.");
+        return;
+    }
+
+    let reportText = `Daily Cleaning Report (${today})\n\n`;
+    r.rows.forEach(row => {
+        reportText += `${row.cleanername}: ${row.total} flats\n`;
+    });
+
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: true,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    });
+
+    await transporter.sendMail({
+        from: `"Aymu Cleaning" <${process.env.SMTP_USER}>`,
+        to: process.env.REPORT_EMAIL_TO,
+        subject: `Daily Cleaning Report - ${today}`,
+        text: reportText
+    });
+
+    console.log("Daily report email sent ✔️");
+}
 
 // ---------------------- WEBSOCKET SERVER ---------------
 
@@ -253,6 +329,18 @@ wss.on("connection", (ws) => {
     }, 10000);
 
     ws.on("close", () => clearInterval(interval));
+});
+
+// ---------------------- CRON JOB -----------------------
+
+// Every day at 19:00
+cron.schedule("0 19 * * *", async () => {
+    console.log("⏰ 19:00 cron triggered");
+    try {
+        await sendDailyReport();
+    } catch (e) {
+        console.error("Daily report error:", e);
+    }
 });
 
 // ---------------------- SERVER START --------------------
