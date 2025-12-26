@@ -135,13 +135,13 @@ app.post("/api/cleanings", upload.fields([
 
         const result = await pool.query(
             `
-      INSERT INTO cleanings
-      (cleanerName, block, apartmentNumber, status, notes, cleaningDate, cleaningTime,
-       tenantNotHome, tenantSigned, tenantSignature, cleaningRequest, photos)
-      VALUES
-      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
-      RETURNING *
-      `,
+    INSERT INTO cleanings
+    (cleanername, block, apartmentnumber, status, notes, cleaningdate, cleaningtime,
+     tenantnothome, tenantsigned, tenantsignature, cleaningrequest, photos)
+    VALUES
+    ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
+    RETURNING *
+    `,
             [
                 cleanerName || "",
                 block || "",
@@ -182,33 +182,31 @@ app.post("/api/cleanings", upload.fields([
 app.get("/api/cleanings", async (req, res) => {
     try {
         const r = await pool.query(`
-      SELECT
-        id,
-        "cleanerName"      AS "cleanerName",
-        block,
-        "apartmentNumber"  AS "apartmentNumber",
-        status,
+            SELECT
+                id,
+                cleanername        AS "cleanerName",
+                block,
+                apartmentnumber    AS "apartmentNumber",
+                status,
+                cleaningdate       AS "cleaningDate",
+                cleaningtime       AS "cleaningTime",
+                cleaningrequest    AS "cleaningRequest",
+                tenantnothome      AS "tenantNotHome",
+                tenantsigned       AS "tenantSigned",
+                tenantsignature    AS "tenantSignature",
+                notes,
+                photos
+            FROM cleanings
+            ORDER BY id DESC
+        `);
 
-        "cleaningDate"     AS "cleaningDate",
-        "cleaningTime"     AS "cleaningTime",
-
-        "cleaningRequest"  AS "cleaningRequest",
-        "tenantNotHome"    AS "tenantNotHome",
-        "tenantSigned"     AS "tenantSigned",
-        "tenantSignature"  AS "tenantSignature",
-
-        notes,
-        photos,
-        "createdAt"        AS "createdAt"
-      FROM cleanings
-      ORDER BY id DESC
-    `);
-
-        res.json({ success: true, data: r.rows });
+        res.json({ success: true, data: r.rows, rows: r.rows });
     } catch (e) {
+        console.error("❌ GET /api/cleanings error:", e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
+
 
 
 // ---------------------- API: JOB FINISHED --------------
