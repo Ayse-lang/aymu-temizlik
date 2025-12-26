@@ -21,6 +21,20 @@ const pool = new Pool({
         : false,
 });
 
+async function ensureProblemColumns() {
+    try {
+        await pool.query(`
+      ALTER TABLE cleanings
+        ADD COLUMN IF NOT EXISTS hasproblem boolean DEFAULT false,
+        ADD COLUMN IF NOT EXISTS problemnote text,
+        ADD COLUMN IF NOT EXISTS problemphoto text;
+    `);
+        console.log("✅ ensured problem columns");
+    } catch (e) {
+        console.error("❌ ensureProblemColumns error:", e.message);
+    }
+}
+ensureProblemColumns();
 
 async function initDB() {
     await pool.query(`
@@ -98,82 +112,45 @@ app.get("/api/db-test", async (req, res) => {
     }
 });
 
-
 // ---------------------- API: KAYIT EKLE ----------------
 
 app.post("/api/cleanings", upload.fields([
     { name: "photos", maxCount: 10 },
     { name: "problemPhoto", maxCount: 1 }
 ]), async (req, res) => {
-    // Add logging for debugging
-    console.log("BODY:", req.body);
-    console.log("FILES:", req.files);
-
     try {
         const {
-            cleanerName,
-            block,
-            apartmentNumber,
-            status,
-            notes,
-            cleaningDate,
-            cleaningTime,
-            tenantNotHome,
-            cleaningRequest,
-            tenantSigned,
-            tenantSignature,
-            hasProblem,
-            problemNote,
+            cleanerName, block, apartmentNumber, status, notes,
+            cleaningDate, cleaningTime, tenantNotHome, tenantSigned,
+            tenantSignature, cleaningRequest
         } = req.body;
 
-        const photos = (req.files?.photos || []).map(f => `/uploads/${f.filename}`);
-        const problemPhoto = (req.files?.problemPhoto?.[0])
-            ? `/uploads/${req.files.problemPhoto[0].filename}`
-            : null;
+        const photos = req.files?.photos?.map(file => `/uploads/${file.filename}`) || [];
+        const hasProblem = req.body.hasProblem === "true" || req.body.hasProblem === true;
+        const problemNote = req.body.problemNote || "";
+        const problemFile = req.files?.problemPhoto?.[0];
+        const problemPhotoPath = problemFile ? `/uploads/${problemFile.filename}` : null;
 
-        const hasProblemBool = String(hasProblem) === "true";
-
-        const result = await pool.query(
-            `
-    INSERT INTO cleanings
-    (cleanername, block, apartmentnumber, status, notes, cleaningdate, cleaningtime,
-     tenantnothome, tenantsigned, tenantsignature, cleaningrequest, photos)
-    VALUES
-    ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
-    RETURNING *
-    `,
+        const result = await pool.query(`
+      INSERT INTO cleanings
+      (cleanername, block, apartmentnumber, status, notes, cleaningdate, cleaningtime,
+       tenantnothome, tenantsigned, tenantsignature, cleaningrequest, photos,
+       hasproblem, problemnote, problemphoto)
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13, $14, $15)
+      RETURNING *`,
             [
-                cleanerName || "",
-                block || "",
-                apartmentNumber || "",
-                status || "",
-                notes || "",
-                cleaningDate || "",
-                cleaningTime || "",
-                tenantNotHome === "true",
-                tenantSigned === "true",
-                tenantSignature || "",
-                cleaningRequest || "requested",
-                JSON.stringify(photos),
+                cleanerName, block, apartmentNumber, status, notes,
+                cleaningDate, cleaningTime, tenantNotHome, tenantSigned,
+                tenantSignature, cleaningRequest, JSON.stringify(photos),
+                hasProblem, problemNote, problemPhotoPath
             ]
         );
 
-        if (hasProblemBool) {
-            console.log("🚨 Problem reported:", {
-                block,
-                apartmentNumber,
-                problemNote,
-                problemPhoto,
-            });
-
-            // Here you can call a function to send a WhatsApp message
-            // sendProblemWhatsApp({ block, apartmentNumber, problemNote, problemPhoto });
-        }
-
         res.json({ success: true, data: result.rows[0] });
     } catch (err) {
-        console.error("CLEANING ERROR:", err);
-        res.json({ success: false, error: err.message || "db insert error" });
+        console.error("Error in POST /api/cleanings:", err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -181,33 +158,35 @@ app.post("/api/cleanings", upload.fields([
 
 app.get("/api/cleanings", async (req, res) => {
     try {
-        const r = await pool.query(`
-            SELECT
-                id,
-                cleanername        AS "cleanerName",
-                block,
-                apartmentnumber    AS "apartmentNumber",
-                status,
-                cleaningdate       AS "cleaningDate",
-                cleaningtime       AS "cleaningTime",
-                cleaningrequest    AS "cleaningRequest",
-                tenantnothome      AS "tenantNotHome",
-                tenantsigned       AS "tenantSigned",
-                tenantsignature    AS "tenantSignature",
-                notes,
-                photos
-            FROM cleanings
-            ORDER BY id DESC
-        `);
+        const result = await pool.query(`
+      SELECT
+        id,
+        cleanername AS "cleanerName",
+        block,
+        apartmentnumber AS "apartmentNumber",
+        status,
+        notes,
+        cleaningdate AS "cleaningDate",
+        cleaningtime AS "cleaningTime",
+        tenantnothome AS "tenantNotHome",
+        tenantsigned AS "tenantSigned",
+        tenantsignature AS "tenantSignature",
+        cleaningrequest AS "cleaningRequest",
+        photos,
+        hasproblem AS "hasProblem",
+        problemnote AS "problemNote",
+        problemphoto AS "problemPhoto",
+        createdat AS "createdAt"
+      FROM cleanings
+      ORDER BY id DESC
+    `);
 
-        res.json({ success: true, data: r.rows, rows: r.rows });
-    } catch (e) {
-        console.error("❌ GET /api/cleanings error:", e);
-        res.status(500).json({ success: false, error: e.message });
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error("Error in GET /api/cleanings:", err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
-
-
 
 // ---------------------- API: JOB FINISHED --------------
 
